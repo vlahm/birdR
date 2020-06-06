@@ -3,7 +3,6 @@ suppressMessages(library(vwr))
 
 args = commandArgs(trailingOnly=TRUE)
 if(is.na(args[1])) stop('Supply path to lifelist plz.')
-
 # args = c(ll_path='~/Downloads/Alice_Pokedex.csv')
 
 #get lifelist
@@ -43,7 +42,10 @@ format_lifelist = function(ll){
         right_join(ll, by='comName') %>%
         arrange(familySciName, sciName) %>%
         select(comName, sciName, familySciName, familyComName, speciesCode,
-            date, location, notes)
+            date, location, notes) %>%
+        mutate(
+            date=format(as.Date(date, format='%m/%e/%Y'), '%Y/%m/%d'),
+            notes=ifelse(is.na(notes), '', notes))
 
     write.csv(ll, args[1], row.names=FALSE)
 
