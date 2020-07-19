@@ -1,4 +1,5 @@
 suppressMessages(library(tidyverse))
+suppressMessages(library(plyr))
 suppressMessages(library(vwr))
 
 #this processing sequence uses lifelist_srs.csv, which was originally
@@ -17,9 +18,6 @@ suppressMessages(library(vwr))
 args = commandArgs(trailingOnly=TRUE)
 # args = c(ll_path='~/Desktop/stuff_2/Databases/lifelist_srs.csv')
 
-#get lifelist
-ll = read.csv(args[1], stringsAsFactors=FALSE)
-
 #get ebird data
 message('Getting eBird data')
 req = httr::GET(paste0('http://ebird.org/ws1.1/ref/taxa/ebird?cat=species,',
@@ -36,12 +34,73 @@ get_user_matchnum = function(matches){
     matchnum = readLines(con="stdin", 1)
 }
 
+get_yn = function(msg){
+
+    message(msg)
+    yn = readLines(con="stdin", 1)
+
+    if(length(yn) == 1 && yn %in% c('y', 'n')){
+        return(yn)
+    } else {
+        get_yn(msg)
+    }
+}
+
+resolve_discrepancies = function(){
+
+    #incomplete. needs work all around
+
+    message('Checking for discrepancies')
+
+    discreps = c()
+    for(i in 1:nrow(ll)){
+        ll_row = ll %>%
+            select(-date, -location, -notes) %>%
+            slice(i)
+        mch = suppressMessages(match_df(ll_row, ebrd))
+        if(! nrow(mch)) discreps = append(discreps, ll_row$comName)
+    }
+
+    ebrd_discreps = ebrd %>%
+        select(sciName, comName, speciesCode, familyComName, familySciName) %>%
+        filter(comName %in% discreps)
+
+    for(i in 1:nrow(ll)){
+        ll_row = ll %>%
+            select(-date, -location, -notes) %>%
+            slice(i)
+        discrep = filter(ebrd_discreps, comName == ll_row$comName)
+        ll_row
+
+    }
+
+    message('Discrepancies detected: ')
+
+    unaccounted_for = discreps[! discreps %in% ebrd_discreps$comName]
+
+    message(paste0('These species are no longer recognized: ',
+                   paste(unaccounted_for, collapse=', ')))
+
+}
+
 update_lifelist = function(){
 
+    ll = read.csv(args[1], stringsAsFactors=FALSE)
+
     # lookup = readline('Enter common name as e.g. Adj-noun Adj-Noun (no quotes) > ')
-    cat('\nEnter common name as e.g. Adj-noun Adj-Noun (no quotes) >\n')
+    cat('\nEnter common name (or c to check for discrepancies; q to quit)>\n')
     lookup = readLines(con="stdin", 1)
     # lookup = 'red throated loon'
+
+    if(lookup == 'q'){
+        message('later')
+        stop()
+    }
+    if(lookup == 'c'){
+        message("Sry. Can't do that yet.")
+        update_lifelist()
+        # resolve_discrepancies()
+    }
 
     if(! lookup %in% ebrd$comName){
 
@@ -64,11 +123,14 @@ update_lifelist = function(){
 
     if(lookup %in% ll$comName){
         message('Yo, that shit is already in ur list:')
-        existing_row = ll[ll$comName == lookup, ]
+        existing_row_ind = which(ll$comName == lookup)
+        existing_row = ll[existing_row_ind, ]
         cat(paste0('\n', paste(colnames(existing_row),
             unname(unlist(existing_row)), sep=': ', collapse='\n'),
             '\n'))
-        update_lifelist()
+        yn = get_yn('\nReplace entry? y, n\n')
+        if(yn == 'n') update_lifelist()
+        ll = slice(ll, -existing_row_ind)
     }
 
     # if(! lookup %in% ebrd$comName){
@@ -107,9 +169,15 @@ update_lifelist = function(){
         unname(unlist(newrow)), sep=': ', collapse='\n'),
         '\n'))
     cat(paste0('\nSpecies count: ', cnt, '\n'))
+
+    update_lifelist()
 }
 
-update_lifelist()
+empty = tryCatch({
+    empty = update_lifelist()
+}, error = function(e){
+    return()
+})
 
 # #correct hyphenated modifiers in common names in lifelist to X-x format
 # ll$comName = sub('\\-([A-Z])', '-\\L\\1', ll$comName, perl=TRUE)
