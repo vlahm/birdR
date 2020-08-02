@@ -138,10 +138,38 @@ update_lifelist = function(){
     #     update_lifelist()
     # }
 
-    cat('Enter location > ')
+    if(nchar(previous_location)){
+        cat('Location ([Enter] accepts previous: ',
+            previous_location, ') > ',
+            sep='')
+    } else {
+        cat('Location > ')
+    }
     location = readLines(con="stdin", 1)
-    cat('Enter date as "YYYY-MM-DD" > ')
+    if(! nchar(location)){
+        location = previous_location
+        cat('Using previous: ', previous_location, '\n', sep='')
+    } else {
+        previous_location <<- location
+    }
+
+    if(nchar(previous_date)){
+        cat('Date ([Enter] accepts previous: ',
+            previous_date, ') > ',
+            sep='')
+    } else {
+        cat('Date as "YYYY-MM-DD" > ')
+    }
     date = readLines(con="stdin", 1)
+    if(! nchar(date)){
+        date = previous_date
+        cat('Using previous: ', previous_date, '\n', sep='')
+    } else {
+        previous_date <<- date
+    }
+
+    # cat('Enter date as "YYYY-MM-DD" > ')
+    # date = readLines(con="stdin", 1)
     cat('Enter notes > ')
     notes = readLines(con="stdin", 1)
 
@@ -172,6 +200,9 @@ update_lifelist = function(){
 
     update_lifelist()
 }
+
+previous_location = ''
+previous_date = ''
 
 empty = tryCatch({
     empty = update_lifelist()
