@@ -46,6 +46,21 @@ get_yn = function(msg){
     }
 }
 
+get_response_1char = function(msg, possible_chars){
+
+    #msg is a message that will be used to prompt the user
+    #possible_chars is a character vector of single-character responses
+
+    message(msg)
+    ch = readLines(con="stdin", 1)
+
+    if(length(ch) == 1 && yn %in% possible_chars){
+        return(ch)
+    } else {
+        get_response_1char(msg)
+    }
+}
+
 resolve_discrepancies = function(){
 
     #incomplete. needs work all around
@@ -128,9 +143,25 @@ update_lifelist = function(){
         cat(paste0('\n', paste(colnames(existing_row),
             unname(unlist(existing_row)), sep=': ', collapse='\n'),
             '\n'))
-        yn = get_yn('\nReplace entry? y, n\n')
-        if(yn == 'n') update_lifelist()
-        ll = slice(ll, -existing_row_ind)
+        # yn = get_yn('\nReplace entry? y, n\n')
+        r = get_response_1char('\nUpdate: (l)ocation, (d)ate, (N)ote, (a)ll, (n)one\n')
+        if(r == 'l'){
+            date = existing_row$date
+            notes = existing_row$notes
+            ll = slice(ll, -existing_row_ind)
+        } else if(r == 'd'){
+            location = existing_row$location
+            notes = existing_row$notes
+            ll = slice(ll, -existing_row_ind)
+        } else if(r == 'N'){
+            date = existing_row$date
+            location = existing_row$location
+            ll = slice(ll, -existing_row_ind)
+        } else if(r == 'a'){
+            ll = slice(ll, -existing_row_ind)
+        } else if(r == 'n'){
+            update_lifelist()
+        }
     }
 
     # if(! lookup %in% ebrd$comName){
@@ -138,40 +169,44 @@ update_lifelist = function(){
     #     update_lifelist()
     # }
 
-    if(nchar(previous_location)){
-        cat('Location ([Enter] accepts previous: ',
-            previous_location, ') > ',
-            sep='')
-    } else {
-        cat('Location > ')
-    }
-    location = readLines(con="stdin", 1)
-    if(! nchar(location)){
-        location = previous_location
-        cat('Using previous: ', previous_location, '\n', sep='')
-    } else {
-        previous_location <<- location
-    }
-
-    if(nchar(previous_date)){
-        cat('Date ([Enter] accepts previous: ',
-            previous_date, ') > ',
-            sep='')
-    } else {
-        cat('Date as "YYYY-MM-DD" > ')
-    }
-    date = readLines(con="stdin", 1)
-    if(! nchar(date)){
-        date = previous_date
-        cat('Using previous: ', previous_date, '\n', sep='')
-    } else {
-        previous_date <<- date
+    if(! exists('location')){
+        if(nchar(previous_location)){
+            cat('Location ([Enter] accepts previous: ',
+                previous_location, ') > ',
+                sep='')
+        } else {
+            cat('Location > ')
+        }
+        location = readLines(con="stdin", 1)
+        if(! nchar(location)){
+            location = previous_location
+            cat('Using previous: ', previous_location, '\n', sep='')
+        } else {
+            previous_location <<- location
+        }
     }
 
-    # cat('Enter date as "YYYY-MM-DD" > ')
-    # date = readLines(con="stdin", 1)
-    cat('Enter notes > ')
-    notes = readLines(con="stdin", 1)
+    if(! exists('date')){
+        if(nchar(previous_date)){
+            cat('Date ([Enter] accepts previous: ',
+                previous_date, ') > ',
+                sep='')
+        } else {
+            cat('Date as "YYYY-MM-DD" > ')
+        }
+        date = readLines(con="stdin", 1)
+        if(! nchar(date)){
+            date = previous_date
+            cat('Using previous: ', previous_date, '\n', sep='')
+        } else {
+            previous_date <<- date
+        }
+    }
+
+    if(! exists('notes')){
+        cat('Enter notes > ')
+        notes = readLines(con="stdin", 1)
+    }
 
     newrow = data.frame(lookup=lookup, date=date, location=location,
         notes=notes, stringsAsFactors=FALSE)
