@@ -54,10 +54,10 @@ get_response_1char = function(msg, possible_chars){
     message(msg)
     ch = readLines(con="stdin", 1)
 
-    if(length(ch) == 1 && yn %in% possible_chars){
+    if(length(ch) == 1 && ch %in% possible_chars){
         return(ch)
     } else {
-        get_response_1char(msg)
+        get_response_1char(msg, possible_chars)
     }
 }
 
@@ -105,7 +105,7 @@ update_lifelist = function(){
     # lookup = readline('Enter common name as e.g. Adj-noun Adj-Noun (no quotes) > ')
     cat('\nEnter common name (or c to check for discrepancies; q to quit)>\n')
     lookup = readLines(con="stdin", 1)
-    # lookup = 'red throated loon'
+    # lookup = 'ruffed grouse'
 
     if(lookup == 'q'){
         message('later')
@@ -144,21 +144,27 @@ update_lifelist = function(){
             unname(unlist(existing_row)), sep=': ', collapse='\n'),
             '\n'))
         # yn = get_yn('\nReplace entry? y, n\n')
-        r = get_response_1char('\nUpdate: (l)ocation, (d)ate, (N)ote, (a)ll, (n)one\n')
+        r = get_response_1char('\nUpdate: (l)ocation, (d)ate, (N)ote, (a)ll, (n)one\n',
+            c('l', 'd', 'N', 'a', 'n'))
+        location_needed = date_needed = notes_needed = FALSE
         if(r == 'l'){
             date = existing_row$date
             notes = existing_row$notes
             ll = slice(ll, -existing_row_ind)
+            location_needed = TRUE
         } else if(r == 'd'){
             location = existing_row$location
             notes = existing_row$notes
             ll = slice(ll, -existing_row_ind)
+            date_needed = TRUE
         } else if(r == 'N'){
             date = existing_row$date
             location = existing_row$location
             ll = slice(ll, -existing_row_ind)
+            notes_needed = TRUE
         } else if(r == 'a'){
             ll = slice(ll, -existing_row_ind)
+            location_needed = date_needed = notes_needed = TRUE
         } else if(r == 'n'){
             update_lifelist()
         }
@@ -169,8 +175,8 @@ update_lifelist = function(){
     #     update_lifelist()
     # }
 
-    if(! exists('location')){
-        if(nchar(previous_location)){
+    if(location_needed){
+        if(exists('previous_location') && nchar(previous_location)){
             cat('Location ([Enter] accepts previous: ',
                 previous_location, ') > ',
                 sep='')
@@ -186,8 +192,8 @@ update_lifelist = function(){
         }
     }
 
-    if(! exists('date')){
-        if(nchar(previous_date)){
+    if(date_needed){
+        if(exists('previous_date') && nchar(previous_date)){
             cat('Date ([Enter] accepts previous: ',
                 previous_date, ') > ',
                 sep='')
@@ -203,7 +209,7 @@ update_lifelist = function(){
         }
     }
 
-    if(! exists('notes')){
+    if(notes_needed){
         cat('Enter notes > ')
         notes = readLines(con="stdin", 1)
     }
