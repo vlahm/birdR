@@ -108,7 +108,7 @@ update_lifelist = function(){
     # lookup = 'ruffed grouse'
 
     if(lookup == 'q'){
-        message('later')
+        message('l8z')
         stop()
     }
     if(lookup == 'c'){
