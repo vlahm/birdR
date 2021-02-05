@@ -15,7 +15,6 @@ suppressMessages(library(vwr))
 #look up obsolete names and display current ones
 
 
-
 args = commandArgs(trailingOnly=TRUE)
 # args = c(ll_path='~/Desktop/stuff_2/Databases/lifelist_srs.csv')
 
