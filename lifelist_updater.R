@@ -15,7 +15,7 @@ suppressMessages(library(vwr))
 #look up obsolete names and display current ones
 
 args = commandArgs(trailingOnly=TRUE)
-# args = c(ll_path='~/Desktop/stuff_2/Databases/lifelist_srs.csv')
+# args = c(ll_path='~/Dropbox/stuff_2/Databases/lifelist_srs.csv')
 
 #get ebird data
 message('Getting eBird data')
@@ -134,6 +134,8 @@ update_lifelist = function(){
         enum_match = closest3[as.numeric(matchnum)]
         lookup = substr(enum_match, 3, nchar(enum_match))
     }
+
+    location_needed = date_needed = notes_needed = TRUE
 
     if(lookup %in% ll$comName){
         message('Yo, that shit is already in ur list:')
