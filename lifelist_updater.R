@@ -123,10 +123,11 @@ update_lifelist = function(){
         # init$Ratio(string1 = 'a', string2 = 'b')
 
         nrml <- gsub('[^a-z ]', '' , tolower(ebrd$comName))
+        lookup = gsub('[^a-z ]', '' , tolower(lookup))
         ldists <- sapply(nrml, function(x) stringdist(lookup, x, method = 'jaccard'))
         # ldists = levenshtein.distance(lookup, ebrd$comName)
         closest3 = paste(c(1:3, 0),
-            c(names(ldists[order(ldists)][1:3]), 'none'))
+            c(ebrd$comName[order(ldists)][1:3], 'none'))
 
         matchnum = get_user_matchnum(closest3)
         while(! matchnum %in% 0:4){
