@@ -1,6 +1,6 @@
-suppressMessages(library(tidyverse))
-suppressMessages(library(plyr))
-suppressMessages(library(vwr))
+suppressPackageStartupMessages(library(tidyverse))
+suppressPackageStartupMessages(library(plyr))
+suppressPackageStartupMessages(library(stringdist))
 
 #this processing sequence uses lifelist_srs.csv, which was originally
 #generated from "Life List.doc", Manual modifications have been made since then.
@@ -118,7 +118,13 @@ update_lifelist = function(){
 
     if(! lookup %in% ebrd$comName){
 
-        ldists = levenshtein.distance(lookup, ebrd$comName)
+
+        # init = FuzzMatcher$new()
+        # init$Ratio(string1 = 'a', string2 = 'b')
+
+        nrml <- gsub('[^a-z ]', '' , tolower(ebrd$comName))
+        ldists <- sapply(nrml, function(x) stringdist(lookup, x, method = 'jaccard'))
+        # ldists = levenshtein.distance(lookup, ebrd$comName)
         closest3 = paste(c(1:3, 0),
             c(names(ldists[order(ldists)][1:3]), 'none'))
 
