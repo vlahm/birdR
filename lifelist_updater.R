@@ -13,6 +13,12 @@ suppressPackageStartupMessages(library(stringdist))
 #lookup by a dataframe with a column of common names
 #same for species names, etc
 #look up obsolete names and display current ones
+#don't say 'using previous:' if there is no previous
+#	this may only occur if there's no date
+#print list of all session entries at quit
+#if you type pranfoct, dont give options. ony works if capitalized
+#when entering dates, "N" should accept next
+
 
 args = commandArgs(trailingOnly=TRUE)
 # args = c(ll_path='~/Dropbox/stuff_2/Databases/lifelist_srs.csv')
